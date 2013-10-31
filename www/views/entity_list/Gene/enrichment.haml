@@ -1,0 +1,39 @@
+- databases = Enrichment::DATABASES
+
+- action_card = ActionCard.new do
+  - input :database, :select, "Pathway database", :kegg, :select_options => databases
+  - input :background, :select, "Background list", nil, :select_options => {'none' => 'All genome'}, :html_options => {:class => 'favourite_lists', :type => 'Gene'}
+  - input :cutoff, :float, "Significance cutoff", 0.1
+  - input :fdr, :boolean, "Perform FDR", true
+
+
+- action_card.require :database, :cutoff, :fdr
+= action_card_render action_card do
+
+  - cutoff = cutoff.to_f
+
+  - fdr = false if fdr == "false" or fdr.nil?
+
+  %p 
+    - if defined? background and background and not background == "none"
+      Using #{background} as background.
+      - background = Entity::List.load_list("Gene", background, user) 
+    - else
+      - background = nil
+
+    - if fdr
+      Pvalues are adjusted for multiple testing.
+    - else
+      Pvalues not are adjusted for multiple testing.
+
+  - enrichment = Enrichment.job(:enrichment, "Enrichment (#{ database }) for list: #{ list_id }", :fdr => fdr, :cutoff => cutoff, :organism => list.organism, :database => database, :list => list.ensembl.uniq, :threshold => 0.01, :background => background, :fix_clusters => true)
+
+  - tsv = enrichment.clean.run
+
+  - header tsv.key_field, tsv.key_field.split(":").last
+  - if tsv.size > 0
+    = table :table_id => "Enrichment (#{ database }) for list: #{ list_id }", :page => '1~p-value' do
+      - tsv
+
+  - else
+    No terms enriched for a #{cutoff} cutoff

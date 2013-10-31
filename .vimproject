@@ -1,0 +1,23 @@
+enrichment=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
+ workflow.rb
+ workflow.md
+ lib=lib {
+  gene_enrichment.rb
+ }
+ test=test{
+ }
+ www=www {
+  views=views{
+   entity_list=entity_list{
+    Gene=Gene{
+     enrichment.haml
+    }
+   }
+   entity_map=entity_map{
+    Gene=Gene{
+     enrichment.haml
+    }
+   }
+  }
+ }
+}

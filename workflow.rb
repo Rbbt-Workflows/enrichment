@@ -10,7 +10,6 @@ Workflow.require_workflow 'Genomics'
 require 'genomics_kb'
 
 Workflow.require_workflow 'Translation'
-Workflow.require_workflow 'TSVWorkflow'
 
 module Enrichment
   extend Workflow

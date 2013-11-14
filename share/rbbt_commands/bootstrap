@@ -1,0 +1,90 @@
+#!/usr/bin/env ruby
+
+GENES =<<-EOF
+ERBB3
+SRCAP
+IDH1
+SRRM4
+LRIG3
+E2F7
+CACNA1E
+DNAH11
+SERPINA6
+NFAT5
+MUC16
+MUC17
+PTCH1
+RYR2
+GREB1
+LRRC37A3
+MYBPC2
+LYST
+TTN
+FGA
+TP53
+CHAF1B
+OR2F1
+COL2A1
+ASCL3
+DYNC1H1
+CHD9
+CCDC138
+DOCK3
+SENP6
+CSMD1
+APOB
+COL1A2
+GLDN
+LILRA3
+STX2
+RAI1
+RYR1
+IDH2
+COL5A3
+LRRTM3
+OR4C46
+TRPC4
+SH3GL3
+SIPA1L3
+LAMB3
+USH2A
+GPR98
+HSPA12B
+EIF2AK3
+TRIM2
+TNKS
+ALMS1
+DGKD
+LRP1B
+ZNF677
+SETD2
+PPP4R4
+PCLO
+PDGFRL
+BLNK
+MDH2
+EOF
+
+require 'rbbt/workflow'
+
+Workflow.require_workflow "Genomics"
+require 'rbbt/entity/gene'
+
+Workflow.require_workflow "Enrichment"
+
+genes = GENES
+jobs = []
+Enrichment::DATABASES.each do |database|
+  %w(Hsa Hsa/jun2011 Hsa/may2009 Hsa/jan2013).each do |organism|
+    jobs << Enrichment.job(:enrichment, "BOOTSTRAP", :list => genes.dup, :organism => organism, :database => database)
+  end
+end
+
+jobs.shuffle!
+
+procs = ARGV.shift || "1"
+require 'rbbt/util/semaphore'
+RbbtSemaphore.fork_each_on_semaphore(jobs, procs.to_i) do |job|
+  job.run(true)
+end
+

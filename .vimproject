@@ -1,6 +1,11 @@
 enrichment=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
  workflow.rb
  workflow.md
+ share=share{
+  rbbt_commands=rbbt_commands filter="*"{
+   bootstrap
+  }
+ }
  lib=lib {
   gene_enrichment.rb
  }

@@ -124,6 +124,7 @@ module Enrichment
 
     database_tsv = database_tsv.to_flat
 
+    log :enrichment, "Calculating Enrichment"
     database_tsv.enrichment(ensembl, database_field, :persist => (background.nil? or background.empty?), :cutoff => cutoff, :fdr => fdr, :background => background, :rename => (fix_clusters ? Enrichment::RENAMES : nil), :masked => masked).tap{|tsv| tsv.namespace = organism}
   end
   export_synchronous :enrichment

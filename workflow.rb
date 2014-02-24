@@ -78,9 +78,9 @@ module Enrichment
   end
 
   input :database, :select, "Database code", nil, :select_options => DATABASES
-  input :list, :array, "Gene list in any supported format; they will be translated acordingly"
+  input :list, :array, "Gene list in any supported format; they will be translated accordingly"
   input :organism, :string, "Organism code (not used for kegg)", "Hsa"
-  input :cutoff, :float, "Cufoff value", 0.05
+  input :cutoff, :float, "Cutoff value", 0.05
   input :fdr, :boolean, "Perform Benjamini-Hochberg FDR correction", true
   input :background, :array, "Enrichment background", nil
   input :invert_background, :boolean, "Restrict to elements NOT in background"
@@ -130,10 +130,10 @@ module Enrichment
   export_synchronous :enrichment
 
   input :database, :select, "Database code", nil, :select_options => DATABASES
-  input :list, :array, "Gene list in any supported format; they will be translated acordingly"
+  input :list, :array, "Gene list in any supported format; they will be translated accordingly"
   input :organism, :string, "Organism code (not used for kegg)", "Hsa"
   input :permutations, :integer, "Number of permutations used to compute p.value", 10000
-  input :cutoff, :float, "Cufoff value", 0.05
+  input :cutoff, :float, "Cutoff value", 0.05
   input :fdr, :boolean, "Perform Benjamini-Hochberg FDR correction", true
   input :background, :array, "Enrichment background", nil
   input :mask_diseases, :boolean, "Mask disease related terms", true

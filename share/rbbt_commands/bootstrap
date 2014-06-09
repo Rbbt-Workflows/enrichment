@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 
+R.eval('rbbt.loaded=T')
 GENES =<<-EOF
 ERBB3
 SRCAP
@@ -65,6 +66,7 @@ BLNK
 MDH2
 EOF
 genes = GENES.split("\n")
+organisms = %w(Hsa/jun2011 Hsa/may2009 Hsa/jan2013 Hsa)
 
 require 'rbbt/workflow'
 
@@ -76,16 +78,14 @@ Workflow.require_workflow "Enrichment"
 
 jobs = []
 Enrichment::DATABASES.each do |database|
-  %w(Hsa Hsa/jun2011 Hsa/may2009 Hsa/jan2013).each do |organism|
+  organisms.each do |organism|
     jobs << Enrichment.job(:enrichment, "BOOTSTRAP", :list => genes.dup, :organism => organism, :database => database)
   end
 end
 
-jobs.shuffle!
-
-procs = ARGV.shift || "1"
-require 'rbbt/util/semaphore'
-RbbtSemaphore.fork_each_on_semaphore(jobs, procs.to_i) do |job|
-  job.run(true)
+jobs.each do |job|
+  job.fork
+  job.grace
 end
 
+Step.wait_for_jobs(jobs)

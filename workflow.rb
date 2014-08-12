@@ -15,13 +15,13 @@ module Enrichment
   extend Workflow
   extend Resource
 
-  self.subdir = "Enrichment"
+  self.subdir = "var/Enrichment"
 
   class << self
     attr_accessor :knowledge_base_dir
 
     def knowledge_base_dir
-      @knowledge_base_dir ||= Enrichment.var.knowledge_base
+      @knowledge_base_dir ||= Enrichment.knowledge_base
     end
   end
 

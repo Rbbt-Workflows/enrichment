@@ -66,7 +66,7 @@ BLNK
 MDH2
 EOF
 genes = GENES.split("\n")
-organisms = %w(Hsa/jun2011 Hsa/may2009 Hsa/jan2013 Hsa)
+organisms = Organism.organism_codes
 
 require 'rbbt/workflow'
 
@@ -80,6 +80,7 @@ jobs = []
 Enrichment::DATABASES.each do |database|
   organisms.each do |organism|
     jobs << Enrichment.job(:enrichment, "BOOTSTRAP", :list => genes.dup, :organism => organism, :database => database)
+    jobs << Enrichment.job(:rank_enrichment, "BOOTSTRAP", :list => genes.dup, :organism => organism, :database => database)
   end
 end
 

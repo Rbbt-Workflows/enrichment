@@ -29,7 +29,7 @@ module Enrichment
   MASKED_TERMS = %w(cancer melanoma carcinoma glioma hepatitis leukemia leukaemia disease infection opathy hepatitis sclerosis hepatatis glioma Shigellosis)
   MASKED_IDS = {}
 
-  RENAMES = Organism.identifiers("Hsa/jun2011").tsv(:persist => false, :key_field => "Ensembl Gene ID", :fields => [], :grep => '^#\|PCDH', :type => :list, :persit_update => true).add_field("Cluster"){ "Cadherin" }
+  RENAMES = Organism.identifiers("Hsa/feb2014").tsv(:persist => false, :key_field => "Ensembl Gene ID", :fields => [], :grep => '^#\|PCDH', :type => :list, :persit_update => true).add_field("Cluster"){ "Cadherin" }
   RENAMES.type = :single
   RENAMES.process("Cluster") do |values|
     values.first
@@ -39,11 +39,11 @@ module Enrichment
     RENAMES[gene] = "Cadherin"
   end
 
-  Organism.identifiers("Hsa/jun2011").tsv(:persist => false, :key_field => "UniProt/SwissProt Accession", :fields => [], :grep => '^#\|PCDH', :type => :list, :persit_update => true).add_field("Cluster"){ "Cadherin" }.keys.each do |gene|
+  Organism.identifiers("Hsa/feb2014").tsv(:persist => false, :key_field => "UniProt/SwissProt Accession", :fields => [], :grep => '^#\|PCDH', :type => :list, :persit_update => true).add_field("Cluster"){ "Cadherin" }.keys.each do |gene|
     RENAMES[gene] = "Cadherin"
   end
 
-  Organism.identifiers("Hsa/jun2011").tsv(:persist => false, :key_field => "Entrez Gene ID", :fields => [], :grep => '^#\|PCDH', :type => :list, :persit_update => true).add_field("Cluster"){ "Cadherin" }.keys.each do |gene|
+  Organism.identifiers("Hsa/feb2014").tsv(:persist => false, :key_field => "Entrez Gene ID", :fields => [], :grep => '^#\|PCDH', :type => :list, :persit_update => true).add_field("Cluster"){ "Cadherin" }.keys.each do |gene|
     RENAMES[gene] = "Cadherin"
   end
 
@@ -91,8 +91,8 @@ module Enrichment
 
     ensembl    = Translation.job(:translate, nil, :format => "Ensembl Gene ID", :genes => list, :organism => organism).run.compact.uniq
     background = Translation.job(:translate, nil, :format => "Ensembl Gene ID", :genes => background, :organism => organism).run.compact.uniq if background and background.any?
-    Gene.setup(ensembl, "Ensembl Gene ID", "Hsa")
-    Gene.setup(background, "Ensembl Gene ID", "Hsa") if background
+    Gene.setup(ensembl, "Ensembl Gene ID", "Hsa/feb2014")
+    Gene.setup(background, "Ensembl Gene ID", "Hsa/feb2014") if background
 
     database_tsv, all_db_genes, database_key_field, database_field = database_info database, organism
 

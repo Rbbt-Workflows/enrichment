@@ -7,7 +7,9 @@ enrichment=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
   }
  }
  lib=lib {
-  gene_enrichment.rb
+  entity=rbbt/entity{
+   enrichment.rb
+  }
  }
  test=test{
  }

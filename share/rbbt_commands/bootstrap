@@ -75,18 +75,19 @@ require 'rbbt/entity/gene'
 
 Workflow.require_workflow "Enrichment"
 
-
 jobs = []
 Enrichment::DATABASES.each do |database|
   organisms.each do |organism|
-    jobs << Enrichment.job(:enrichment, "BOOTSTRAP", :list => genes.dup, :organism => organism, :database => database)
-    jobs << Enrichment.job(:rank_enrichment, "BOOTSTRAP", :list => genes.dup, :organism => organism, :database => database)
+    jobs << Enrichment.job(:enrichment, "BOOTSTRAP-#{organism}-#{database}", :list => genes.dup, :organism => organism, :database => database)
+    jobs << Enrichment.job(:rank_enrichment, "BOOTSTRAP-#{organism}-#{database}", :list => genes.dup, :organism => organism, :database => database)
   end
 end
 
-jobs.each do |job|
-  job.fork
-  job.grace
-end
 
-Step.wait_for_jobs(jobs)
+jobs.shuffle!
+
+procs = ARGV.shift 
+require 'rbbt/util/semaphore'
+Misc.bootstrap(jobs, 1) do |job|
+  job.run
+end

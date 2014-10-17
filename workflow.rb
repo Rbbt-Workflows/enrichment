@@ -35,7 +35,7 @@ module Enrichment
     values.first
   end
 
-  RENAMES.keys.to_kegg.compact.each do |gene|
+  RENAMES.keys.to("KEGG Gene ID").compact.each do |gene|
     RENAMES[gene] = "Cadherin"
   end
 

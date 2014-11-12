@@ -60,7 +60,7 @@ module Enrichment
                                  kb
                                end
 
-    db = @organism_kb[organism].get_database(database, :persist => true)
+    db = @organism_kb[organism].get_database(database, :persist => true, :target => "Gene=>Ensembl Gene ID" )
 
     tsv, total_keys, source_field, target_field = [db, db.keys, db.key_field, db.fields.first]
 

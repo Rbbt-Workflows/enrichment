@@ -29,7 +29,7 @@ module Enrichment
   MASKED_TERMS = %w(cancer melanoma carcinoma glioma hepatitis leukemia leukaemia disease infection opathy hepatitis sclerosis hepatatis glioma Shigellosis)
   MASKED_IDS = {}
 
-  RENAMES = Organism.identifiers("Hsa/feb2014").tsv(:persist => false, :key_field => "Ensembl Gene ID", :fields => [], :grep => '^#\|PCDH', :type => :list, :persit_update => true).add_field("Cluster"){ "Cadherin" }
+  RENAMES = Organism.identifiers(Organism.default_code("Hsa")).tsv(:persist => false, :key_field => "Ensembl Gene ID", :fields => [], :grep => '^#\|PCDH', :type => :list, :persit_update => true).add_field("Cluster"){ "Cadherin" }
   RENAMES.type = :single
   RENAMES.process("Cluster") do |values|
     values.first
@@ -39,47 +39,50 @@ module Enrichment
     RENAMES[gene] = "Cadherin"
   end
 
-  Organism.identifiers("Hsa/feb2014").tsv(:persist => false, :key_field => "UniProt/SwissProt Accession", :fields => [], :grep => '^#\|PCDH', :type => :list, :persit_update => true).add_field("Cluster"){ "Cadherin" }.keys.each do |gene|
+  Organism.identifiers(Organism.default_code("Hsa")).tsv(:persist => false, :key_field => "UniProt/SwissProt Accession", :fields => [], :grep => '^#\|PCDH', :type => :list, :persit_update => true).add_field("Cluster"){ "Cadherin" }.keys.each do |gene|
     RENAMES[gene] = "Cadherin"
   end
 
-  Organism.identifiers("Hsa/feb2014").tsv(:persist => false, :key_field => "Entrez Gene ID", :fields => [], :grep => '^#\|PCDH', :type => :list, :persit_update => true).add_field("Cluster"){ "Cadherin" }.keys.each do |gene|
+  Organism.identifiers(Organism.default_code("Hsa")).tsv(:persist => false, :key_field => "Entrez Gene ID", :fields => [], :grep => '^#\|PCDH', :type => :list, :persit_update => true).add_field("Cluster"){ "Cadherin" }.keys.each do |gene|
     RENAMES[gene] = "Cadherin"
   end
 
   DATABASES = Genomics.knowledge_base.registry.keys
 
   helper :database_info do |database, organism|
-    @organism_kb ||= {}
-    @organism_kb[organism] ||= begin
-                                 dir = Enrichment.knowledge_base_dir
+    Persist.memory([database, organism] * ": ") do
+      @organism_kb ||= {}
+      @organism_kb[organism] ||= begin
+                                  dir = Enrichment.knowledge_base_dir
 
-                                 kb = KnowledgeBase.new dir, organism
-                                 kb.format["Gene"] = "Ensembl Gene ID"
-                                 kb.registry = Genomics.knowledge_base.registry
-                                 kb
-                               end
+                                  kb = KnowledgeBase.new dir, organism
+                                  kb.format["Gene"] = "Ensembl Gene ID"
+                                  kb.registry = Genomics.knowledge_base.registry
+                                  kb
+                                end
 
-    db = @organism_kb[organism].get_database(database, :persist => true, :target => "Gene=>Ensembl Gene ID" )
+      db = @organism_kb[organism].get_database(database, :persist => true, :target => "Gene=>Ensembl Gene ID" )
+      db = Association.add_reciprocal db if @organism_kb[organism].registry[database][1][:undirected]
 
-    tsv, total_keys, source_field, target_field = [db, db.keys, db.key_field, db.fields.first]
+      tsv, total_keys, source_field, target_field = [db, db.keys, db.key_field, db.fields.first]
 
-    if target_field == "Ensembl Gene ID"
-      pathway_field, gene_field = source_field, target_field
-      total_genes = Gene.setup(tsv.values.flatten.compact.uniq, "Ensembl Gene ID", organism)
-    else
-      pathway_field, gene_field = target_field, source_field
-      total_genes = total_keys
+      if target_field == "Ensembl Gene ID"
+        pathway_field, gene_field = source_field, target_field
+        total_genes = Gene.setup(tsv.values.flatten.compact.uniq, "Ensembl Gene ID", organism)
+      else
+        pathway_field, gene_field = target_field, source_field
+        total_genes = total_keys
+      end
+
+      tsv.namespace = organism
+
+      [tsv, total_genes, gene_field, pathway_field]
     end
-
-    tsv.namespace = organism
-
-    [tsv, total_genes, gene_field, pathway_field]
   end
 
   input :database, :select, "Database code", nil, :select_options => DATABASES
   input :list, :array, "Gene list in any supported format; they will be translated accordingly"
-  input :organism, :string, "Organism code (not used for kegg)", "Hsa"
+  input :organism, :string, "Organism code (not used for kegg)", Organism.default_code("Hsa")
   input :cutoff, :float, "Cutoff value", 0.05
   input :fdr, :boolean, "Perform Benjamini-Hochberg FDR correction", true
   input :background, :array, "Enrichment background", nil
@@ -91,8 +94,8 @@ module Enrichment
 
     ensembl    = Translation.job(:translate, nil, :format => "Ensembl Gene ID", :genes => list, :organism => organism).run.compact.uniq
     background = Translation.job(:translate, nil, :format => "Ensembl Gene ID", :genes => background, :organism => organism).run.compact.uniq if background and background.any?
-    Gene.setup(ensembl, "Ensembl Gene ID", "Hsa/feb2014")
-    Gene.setup(background, "Ensembl Gene ID", "Hsa/feb2014") if background
+    Gene.setup(ensembl, "Ensembl Gene ID", Organism.default_code("Hsa"))
+    Gene.setup(background, "Ensembl Gene ID", Organism.default_code("Hsa")) if background
 
     database_tsv, all_db_genes, database_key_field, database_field = database_info database, organism
 
@@ -100,8 +103,8 @@ module Enrichment
       background = all_db_genes - background
     end
 
-    log :reordering, "Reordering database"
     database_tsv.with_unnamed do
+      log :reordering, "Reordering database"
       database_tsv.with_monitor :desc => "Reordering" do
         database_tsv = database_tsv.reorder "Ensembl Gene ID"
       end
@@ -131,7 +134,7 @@ module Enrichment
 
   input :database, :select, "Database code", nil, :select_options => DATABASES
   input :list, :array, "Gene list in any supported format; they will be translated accordingly"
-  input :organism, :string, "Organism code (not used for kegg)", "Hsa"
+  input :organism, :string, "Organism code (not used for kegg)", Organism.default_code("Hsa")
   input :permutations, :integer, "Number of permutations used to compute p.value", 10000
   input :cutoff, :float, "Cutoff value", 0.05
   input :fdr, :boolean, "Perform Benjamini-Hochberg FDR correction", true
@@ -144,8 +147,8 @@ module Enrichment
 
     ensembl    = Translation.job(:translate, nil, :format => "Ensembl Gene ID", :genes => list, :organism => organism).run.compact.uniq
     background = Translation.job(:translate, nil, :format => "Ensembl Gene ID", :genes => background, :organism => organism).run.compact.uniq if background and background.any?
-    Gene.setup(ensembl, "Ensembl Gene ID", "Hsa")
-    Gene.setup(background, "Ensembl Gene ID", "Hsa") if background
+    Gene.setup(ensembl, "Ensembl Gene ID", Organism.default_code("Hsa"))
+    Gene.setup(background, "Ensembl Gene ID", Organism.default_code("Hsa")) if background
 
     database_tsv, all_db_genes, database_key_field, database_field = database_info database, organism
 

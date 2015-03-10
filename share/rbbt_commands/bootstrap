@@ -72,6 +72,7 @@ require 'rbbt/workflow'
 
 Workflow.require_workflow "Genomics"
 require 'rbbt/entity/gene'
+require 'rbbt/entity/gene/basic'
 
 Workflow.require_workflow "Enrichment"
 

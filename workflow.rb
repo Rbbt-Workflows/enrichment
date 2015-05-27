@@ -7,7 +7,7 @@ require 'rbbt/statistics/hypergeometric'
 require 'rbbt/statistics/random_walk'
 
 Workflow.require_workflow 'Genomics'
-require 'genomics_kb'
+require 'rbbt/knowledge_base/Genomics'
 
 Workflow.require_workflow 'Translation'
 
@@ -47,7 +47,8 @@ module Enrichment
     RENAMES[gene] = "Cadherin"
   end
 
-  DATABASES = Genomics.knowledge_base.registry.keys
+  REGISTRY = Genomics.knowledge_base.registry
+  DATABASES = REGISTRY.keys
 
   helper :database_info do |database, organism|
     Persist.memory([database, organism] * ": ") do
@@ -57,7 +58,8 @@ module Enrichment
 
                                   kb = KnowledgeBase.new dir, organism
                                   kb.format["Gene"] = "Ensembl Gene ID"
-                                  kb.registry = Genomics.knowledge_base.registry
+                                  kb.registry = REGISTRY
+                                  DATABASES.replace(REGISTRY.keys)
                                   kb
                                 end
 
@@ -86,12 +88,13 @@ module Enrichment
   input :cutoff, :float, "Cutoff value", 0.05
   input :fdr, :boolean, "Perform Benjamini-Hochberg FDR correction", true
   input :background, :array, "Enrichment background", nil
-  input :invert_background, :boolean, "Restrict to elements NOT in background"
+  input :invert_background, :boolean, "Restrict to elements NOT in background", false
   input :mask_diseases, :boolean, "Mask disease related terms", true
   input :fix_clusters, :boolean, "Fixed dependence in gene clusters", true
   task :enrichment => :tsv do |database, list, organism, cutoff, fdr, background, invert_background, mask_diseases, fix_clusters|
     raise ParameterException, "No list given" if list.nil? or list.empty?
 
+    background = nil if Array === background and background.empty?
     ensembl    = Translation.job(:translate, nil, :format => "Ensembl Gene ID", :genes => list, :organism => organism).run.compact.uniq
     background = Translation.job(:translate, nil, :format => "Ensembl Gene ID", :genes => background, :organism => organism).run.compact.uniq if background and background.any?
     Gene.setup(ensembl, "Ensembl Gene ID", Organism.default_code("Hsa"))

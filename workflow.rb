@@ -92,7 +92,7 @@ module Enrichment
   input :mask_diseases, :boolean, "Mask disease related terms", true
   input :fix_clusters, :boolean, "Fixed dependence in gene clusters", true
   task :enrichment => :tsv do |database, list, organism, cutoff, fdr, background, invert_background, mask_diseases, fix_clusters|
-    raise ParameterException, "No list given" if list.nil? or list.empty?
+    raise ParameterException, "No list given" if list.nil?
 
     background = nil if Array === background and background.empty?
     ensembl    = Translation.job(:translate, nil, :format => "Ensembl Gene ID", :genes => list, :organism => organism).run.compact.uniq
@@ -146,7 +146,7 @@ module Enrichment
   input :fix_clusters, :boolean, "Fixed dependence in gene clusters", true
   input :count_missing, :boolean, "Account for genes with pathway annotations that are missing in list", false
   task :rank_enrichment => :tsv do |database, list, organism, permutations, cutoff, fdr, background, mask_diseases, fix_clusters, count_missing|
-    raise ParameterException, "No list given" if list.nil? or list.empty?
+    raise ParameterException, "No list given" if list.nil?
 
     ensembl    = Translation.job(:translate, nil, :format => "Ensembl Gene ID", :genes => list, :organism => organism).run.compact.uniq
     background = Translation.job(:translate, nil, :format => "Ensembl Gene ID", :genes => background, :organism => organism).run.compact.uniq if background and background.any?

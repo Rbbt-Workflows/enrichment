@@ -35,8 +35,12 @@ module Enrichment
     values.first
   end
 
-  RENAMES.keys.to("KEGG Gene ID").compact.each do |gene|
-    RENAMES[gene] = "Cadherin"
+  begin
+    RENAMES.keys.to("KEGG Gene ID").compact.each do |gene|
+      RENAMES[gene] = "Cadherin"
+    end
+  rescue
+    Log.warn "Could not process KEGG renames"
   end
 
   Organism.identifiers(Organism.default_code("Hsa")).tsv(:persist => false, :key_field => "UniProt/SwissProt Accession", :fields => [], :grep => '^#\|PCDH', :type => :list, :persit_update => true).add_field("Cluster"){ "Cadherin" }.keys.each do |gene|

@@ -180,7 +180,7 @@ module Enrichment
 
     log :enrichment, "Performing enrichment"
     database_tsv = database_tsv.to_flat unless database_tsv.type == :flat
-    database_tsv.rank_enrichment(ensembl,  :persist => (background.nil? or background.empty?), :cutoff => cutoff, :fdr => fdr, :background => background, :rename => (fix_clusters ? RENAMES : nil), :permutations => permutations, :persist_permutations => true, :missing => missing || 0, :masked => masked).select("p-value"){|p| p.to_f <= cutoff}.tap{|tsv| tsv.namespace = organism}
+    database_tsv.rank_enrichment(ensembl,  :persist => (background.nil? or background.empty?), :cutoff => cutoff, :fdr => fdr, :background => background, :rename => (fix_clusters ? RENAMES : nil), :permutations => permutations, :persist_permutations => true, :missing => missing || 0, :masked => masked).select("p-value"){|p| p.to_f.abs <= cutoff}.tap{|tsv| tsv.namespace = organism}
   end
   export_asynchronous :rank_enrichment
 end

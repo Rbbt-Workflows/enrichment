@@ -10,8 +10,14 @@
 - action_card.require :database, :cutoff, :fdr, :permutations
 = action_card_render action_card do
   - job = Enrichment.job(:rank_enrichment, map_id, :database => database, :list => map.sort_by(map.fields.first, true), :organism => map.namespace, :cutoff => cutoff.to_f, :permutations => permutations.to_i, :fdr => fdr)
-  = table :table_id => "Rank enrichment (#{ database }) for list: #{ map_id }", :page => '1~p-value' do
-    - job.run
+
+  %h3 Directly related
+  = table :table_id => "Rank enrichment (#{ database }) for list: #{ map_id } - Direct", :page => '1~p-value' do
+    - job.run.select("p-value"){|f| (Array === f ? f.first : f).to_f > 0}
+
+  %h3 Inversely related
+  = table :table_id => "Rank enrichment (#{ database }) for list: #{ map_id } - Inverse", :page => '1~p-value' do
+    - job.run.select("p-value"){|f| (Array === f ? f.first : f).to_f <= 0}.process("p-value"){|f| Array === f ? f.collect{|v| v.to_f.abs} : f.to_f.abs }
 
 
 

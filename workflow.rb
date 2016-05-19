@@ -101,6 +101,9 @@ module Enrichment
     background = nil if Array === background and background.empty?
     ensembl    = Translation.job(:translate, nil, :format => "Ensembl Gene ID", :genes => list, :organism => organism).run.compact.uniq
     background = Translation.job(:translate, nil, :format => "Ensembl Gene ID", :genes => background, :organism => organism).run.compact.uniq if background and background.any?
+
+    ensembl.reject!{|e| e.nil? or e.empty?}
+
     Gene.setup(ensembl, "Ensembl Gene ID", Organism.default_code("Hsa"))
     Gene.setup(background, "Ensembl Gene ID", Organism.default_code("Hsa")) if background
 
@@ -113,7 +116,7 @@ module Enrichment
     database_tsv.with_unnamed do
       log :reordering, "Reordering database"
       database_tsv.with_monitor :desc => "Reordering" do
-        database_tsv = database_tsv.reorder "Ensembl Gene ID", nil, :persist => true
+        database_tsv = database_tsv.reorder "Ensembl Gene ID", nil, :persist => true, :zipped => true
       end
     end unless "Ensembl Gene ID" == database_field
 
@@ -154,6 +157,9 @@ module Enrichment
 
     ensembl    = Translation.job(:translate, nil, :format => "Ensembl Gene ID", :genes => list, :organism => organism).run.compact.uniq
     background = Translation.job(:translate, nil, :format => "Ensembl Gene ID", :genes => background, :organism => organism).run.compact.uniq if background and background.any?
+
+    ensembl.reject!{|e| e.nil? or e.empty?}
+
     Gene.setup(ensembl, "Ensembl Gene ID", Organism.default_code("Hsa"))
     Gene.setup(background, "Ensembl Gene ID", Organism.default_code("Hsa")) if background
 

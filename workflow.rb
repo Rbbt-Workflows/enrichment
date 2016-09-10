@@ -113,10 +113,14 @@ module Enrichment
       background = all_db_genes - background
     end
 
+    if background.nil?
+      background = all_db_genes - Organism.blacklist_genes(organism).list
+    end
+
     database_tsv.with_unnamed do
       log :reordering, "Reordering database"
       database_tsv.with_monitor :desc => "Reordering" do
-        database_tsv = database_tsv.reorder "Ensembl Gene ID", nil, :persist => true, :zipped => true
+        database_tsv = database_tsv.reorder "Ensembl Gene ID", nil, :persist => true, :zipped => true, :merge => true
       end
     end unless "Ensembl Gene ID" == database_field
 

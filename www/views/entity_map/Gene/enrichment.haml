@@ -13,7 +13,10 @@
 
   %h3 Directly related
   = table :table_id => "Rank enrichment (#{ database }) for list: #{ map_id } - Direct", :page => '1~p-value' do
-    - job.run.select("p-value"){|f| (Array === f ? f.first : f).to_f > 0}
+    - tsv = job.run.select("p-value"){|f| (Array === f ? f.first : f).to_f > 0}
+    - tsv = tsv.process("Ensembl Gene ID"){|v| v.reverse}
+    - tsv = tsv.process("Rank"){|v| v.reverse}
+    - tsv
 
   %h3 Inversely related
   = table :table_id => "Rank enrichment (#{ database }) for list: #{ map_id } - Inverse", :page => '1~p-value' do

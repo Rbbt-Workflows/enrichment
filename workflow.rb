@@ -72,6 +72,8 @@ module Enrichment
 
       tsv, total_keys, source_field, target_field = [db, db.keys, db.key_field, db.fields.first]
 
+      tsv.filename = db.persistence_path
+
       if target_field == "Ensembl Gene ID"
         pathway_field, gene_field = source_field, target_field
         total_genes = Gene.setup(tsv.values.flatten.compact.uniq, "Ensembl Gene ID", organism)

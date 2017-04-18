@@ -67,7 +67,7 @@ module Enrichment
                                   kb
                                 end
 
-      db = @organism_kb[organism].get_database(database, :persist => true, :target => "Gene=>Ensembl Gene ID" )
+      db = @organism_kb[organism].get_database(database, :persist => true)
       db = Association.add_reciprocal db if @organism_kb[organism].registry[database][1][:undirected]
 
       tsv, total_keys, source_field, target_field = [db, db.keys, db.key_field, db.fields.first]
@@ -87,6 +87,14 @@ module Enrichment
       [tsv, total_genes, gene_field, pathway_field]
     end
   end
+
+  input :database, :select, "Database code", nil, :select_options => DATABASES
+  input :organism, :string, "Organism code (not used for kegg)", Organism.default_code("Hsa")
+  task :database_genes => :array do |database,organism|
+    database_tsv, all_db_genes, database_key_field, database_field = database_info database, organism
+    all_db_genes
+  end
+
 
   input :database, :select, "Database code", nil, :select_options => DATABASES
   input :list, :array, "Gene list in any supported format; they will be translated accordingly"

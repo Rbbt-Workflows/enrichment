@@ -91,6 +91,7 @@ module Enrichment
   input :database, :select, "Database code", nil, :select_options => DATABASES
   input :organism, :string, "Organism code (not used for kegg)", Organism.default_code("Hsa")
   task :database_genes => :array do |database,organism|
+    raise ParameterException, "No database specified"  if database.nil?
     database_tsv, all_db_genes, database_key_field, database_field = database_info database, organism
     all_db_genes
   end
@@ -106,7 +107,8 @@ module Enrichment
   input :mask_diseases, :boolean, "Mask disease related terms", true
   input :fix_clusters, :boolean, "Fixed dependence in gene clusters", true
   task :enrichment => :tsv do |database, list, organism, cutoff, fdr, background, invert_background, mask_diseases, fix_clusters|
-    raise ParameterException, "No list given" if list.nil?
+    raise ParameterException, "No list provided" if list.nil?
+    raise ParameterException, "No database specified"  if database.nil?
 
     background = nil if Array === background and background.empty?
     ensembl    = Translation.job(:translate, nil, :format => "Ensembl Gene ID", :genes => list, :organism => organism).run.compact.uniq
@@ -167,7 +169,8 @@ module Enrichment
   input :fix_clusters, :boolean, "Fixed dependence in gene clusters", true
   input :count_missing, :boolean, "Account for genes with pathway annotations that are missing in list", false
   task :rank_enrichment => :tsv do |database, list, organism, permutations, cutoff, fdr, background, mask_diseases, fix_clusters, count_missing|
-    raise ParameterException, "No list given" if list.nil?
+    raise ParameterException, "No list provided" if list.nil?
+    raise ParameterException, "No database specified"  if database.nil?
 
     ensembl    = Translation.job(:translate, nil, :format => "Ensembl Gene ID", :genes => list, :organism => organism).run.compact.uniq
     background = Translation.job(:translate, nil, :format => "Ensembl Gene ID", :genes => background, :organism => organism).run.compact.uniq if background and background.any?

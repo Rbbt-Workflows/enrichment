@@ -106,7 +106,8 @@ module Enrichment
   input :invert_background, :boolean, "Restrict to elements NOT in background", false
   input :mask_diseases, :boolean, "Mask disease related terms", true
   input :fix_clusters, :boolean, "Fixed dependence in gene clusters", true
-  task :enrichment => :tsv do |database, list, organism, cutoff, fdr, background, invert_background, mask_diseases, fix_clusters|
+  input :min_support, :integer, "Minimum number of genes in pathway", 3
+  task :enrichment => :tsv do |database, list, organism, cutoff, fdr, background, invert_background, mask_diseases, fix_clusters, min_support|
     raise ParameterException, "No list provided" if list.nil?
     raise ParameterException, "No database specified"  if database.nil?
 
@@ -132,9 +133,9 @@ module Enrichment
     database_tsv.with_unnamed do
       log :reordering, "Reordering database"
       database_tsv.with_monitor :desc => "Reordering" do
-        database_tsv = database_tsv.reorder "Ensembl Gene ID", nil, :persist => true, :zipped => true, :merge => true
+        database_tsv = database_tsv.reorder "Ensembl Gene ID", [database_field], :persist => true, :zipped => true, :merge => true, :uniq => true
       end
-    end unless "Ensembl Gene ID" == database_field
+    end unless "Ensembl Gene ID" == database_tsv.key_field
 
     if mask_diseases and not Gene == Entity.formats[database_field]
       Log.debug("Masking #{MASKED_TERMS * ", "}")
@@ -151,10 +152,10 @@ module Enrichment
       masked = nil
     end
 
-    database_tsv = database_tsv.to_flat unless database_tsv.type == :flat
+    #database_tsv = database_tsv.to_flat unless database_tsv.type == :flat
 
     log :enrichment, "Calculating Enrichment"
-    database_tsv.enrichment(ensembl, database_field, :persist => (background.nil? or background.empty?), :cutoff => cutoff, :fdr => fdr, :background => background, :rename => (fix_clusters ? Enrichment::RENAMES : nil), :masked => masked).tap{|tsv| tsv.namespace = organism}
+    database_tsv.enrichment(ensembl, database_field, :skip_missing => false, :min_support => min_support, :persist => (background.nil? or background.empty?), :cutoff => cutoff, :fdr => fdr, :background => background, :rename => (fix_clusters ? Enrichment::RENAMES : nil), :masked => masked).tap{|tsv| tsv.namespace = organism}
   end
   export_synchronous :enrichment
 

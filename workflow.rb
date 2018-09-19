@@ -122,6 +122,7 @@ module Enrichment
 
     database_tsv, all_db_genes, database_key_field, database_field = database_info database, organism
 
+
     if invert_background and background
       background = all_db_genes - background
     end
@@ -136,6 +137,8 @@ module Enrichment
         database_tsv = database_tsv.reorder "Ensembl Gene ID", [database_field], :persist => true, :zipped => true, :merge => true, :uniq => true
       end
     end unless "Ensembl Gene ID" == database_tsv.key_field
+
+    set_info :num_sets, database_tsv.values.flatten.compact.uniq.length
 
     if mask_diseases and not Gene == Entity.formats[database_field]
       Log.debug("Masking #{MASKED_TERMS * ", "}")
